@@ -1,0 +1,41 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Output directories
+dist/
+build/
+coverage/
+out/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+temp/
+.idea/
+.vscode/
+*.swp
+
+# PDF parsing temporary files
+temp_pdfs/
+
+# MongoDB dump files
+dump/
+
+# Puppeteer
+.chrome/
+
+# Ignore output JSON or CSV files that may be generated
+output.json
+output.csv
