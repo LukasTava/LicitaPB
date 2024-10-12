@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <title>Editar Licitação</title>
+</head>
+<body>
+    <h1>Editar Licitação</h1>
+    <form action="/edit/<%= licitacao._id %>" method="POST">
+        <label>Jurisdicionado:</label>
+        <input type="text" name="Jurisdicionado" value="<%= licitacao.Jurisdicionado %>" required>
+        <label>Documento TCE nº:</label>
+        <input type="text" name="DocumentoTCENumero" value="<%= licitacao.DocumentoTCENumero %>" required>
+        <label>Número da Licitação:</label>
+        <input type="text" name="NumeroLicitacao" value="<%= licitacao.NumeroLicitacao %>" required>
+        <label>Modalidade:</label>
+        <input type="text" name="Modalidade" value="<%= licitacao.Modalidade %>" required>
+        <label>Tipo:</label>
+        <input type="text" name="Tipo" value="<%= licitacao.Tipo %>">
+        <label>Tipo de Compra/Serviço:</label>
+        <input type="text" name="TipoCompraServico" value="<%= licitacao.TipoCompraServico %>">
+        <label>Objeto:</label>
+        <textarea name="Objeto" required><%= licitacao.Objeto %></textarea>
+        <label>Data do Certame:</label>
+        <input type="datetime-local" name="DataCertame" value="<%= licitacao.DataCertame ? licitacao.DataCertame.toISOString().slice(0, 16) : '' %>">
+        <label>Local do Certame:</label>
+        <input type="text" name="LocalCertame" value="<%= licitacao.LocalCertame %>">
+        <label>Valor Estimado:</label>
+        <input type="text" name="ValorEstimado" value="<%= licitacao.ValorEstimado %>">
+        <label>Observações:</label>
+        <textarea name="Observacoes"><%= licitacao.Observacoes %></textarea>
+        <button type="submit">Salvar</button>
+    </form>
+    <a href="/">Voltar</a>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <title>Licitações</title>
+</head>
+<body>
+    <h1>Licitações</h1>
+    <% if (licitacoes.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Jurisdicionado</th>
+                    <th>Documento TCE nº</th>
+                    <th>Número da Licitação</th>
+                    <th>Modalidade</th>
+                    <th>Tipo</th>
+                    <th>Objeto</th>
+                    <th>Data do Certame</th>
+                    <th>Local do Certame</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% licitacoes.forEach(licitacao => { %>
+                    <tr>
+                        <td><%= licitacao.Jurisdicionado %></td>
+                        <td><%= licitacao.DocumentoTCENumero %></td>
+                        <td><%= licitacao.NumeroLicitacao %></td>
+                        <td><%= licitacao.Modalidade %></td>
+                        <td><%= licitacao.Tipo %></td>
+                        <td><%= licitacao.Objeto %></td>
+                        <td><%= licitacao.DataCertame ? licitacao.DataCertame.toLocaleString('pt-BR') : '' %></td>
+                        <td><%= licitacao.LocalCertame %></td>
+                        <td><a href="/edit/<%= licitacao._id %>">Editar</a></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <p>Nenhuma licitação encontrada.</p>
+    <% } %>
+</body>
+</html>

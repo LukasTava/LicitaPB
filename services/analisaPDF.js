@@ -24,84 +24,120 @@ async function extractTextFromPdf(pdfPath) {
 }
 
 // Função para localizar a seção "Atos dos Jurisdicionados" e extrair dados das licitações
-function extractLicitacoes(text) {
-    const startSection = "Atos dos Jurisdicionados";
-    const endSection = "Outros Atos";
-
-    // Encontrar o índice de início da seção "Atos dos Jurisdicionados" após o sumário
-    let startIndex = text.indexOf(startSection);
-    if (startIndex === -1) {
-        console.error('Seção "Atos dos Jurisdicionados" não encontrada no PDF.');
-        return [];
-    }
-
-    // Procurar o próximo cabeçalho de seção para determinar onde termina a seção de interesse
-    let endIndex = text.indexOf(endSection, startIndex);
-    if (endIndex === -1) {
-        endIndex = text.length; // Se não encontrar "Outros Atos", considere o final do texto
-    }
-
-    // Extrair apenas a seção "Atos dos Jurisdicionados"
-    const licitacoesSection = text.slice(startIndex, endIndex);
-
-    // Extrair informações da seção "Atos dos Jurisdicionados"
+function extractLicitacoes(textoExtraido) {
     const licitacoes = [];
-    const lines = licitacoesSection.split('\n');
-    let currentLicitacao = {};
-    let collectingObjeto = false;
-    let objetoContent = '';
+    const linhas = textoExtraido.split('\n');
+    
+    let licitacao = {
+        Jurisdicionado: null,
+        DocumentoTCENumero: null,
+        NumeroLicitacao: null,
+        Modalidade: null,
+        Tipo: null,
+        TipoCompraServico: null,
+        Objeto: '',
+        DataCertame: null,
+        LocalCertame: null,
+        ValorEstimado: null,
+        Observacoes: ''
+    };
 
-    lines.forEach(line => {
-        // Começar a coletar informações apenas se a seção estiver correta
-        if (line.includes("Jurisdicionado:")) {
-            // Salva a licitação atual antes de começar uma nova
-            if (Object.keys(currentLicitacao).length > 0) {
-                licitacoes.push(currentLicitacao);
-                console.log('Licitação adicionada:', currentLicitacao);
-                currentLicitacao = {};
-                collectingObjeto = false;
-                objetoContent = '';
+    let coletandoObjeto = false;
+    let coletandoObservacoes = false;
+
+    linhas.forEach((linha) => {
+        linha = linha.trim();
+
+        if (linha.startsWith('Jurisdicionado:')) {
+            // Salva a licitação anterior se ela for válida
+            if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
+                licitacoes.push({ ...licitacao });
             }
-            currentLicitacao['Jurisdicionado'] = line.split("Jurisdicionado:")[1].trim();
-        } else if (line.includes("Documento TCE nº:")) {
-            currentLicitacao['DocumentoTCENumero'] = line.split("Documento TCE nº:")[1].trim();
-        } else if (line.includes("Número da Licitação:")) {
-            currentLicitacao['NumeroLicitacao'] = line.split("Número da Licitação:")[1].trim();
-        } else if (line.includes("Modalidade:")) {
-            currentLicitacao['Modalidade'] = line.split("Modalidade:")[1].trim();
-        } else if (line.includes("Tipo:")) {
-            currentLicitacao['Tipo'] = line.split("Tipo:")[1].trim();
-        } else if (line.includes("Tipo de Compra ou Serviço:")) {
-            currentLicitacao['TipoCompraServico'] = line.split("Tipo de Compra ou Serviço:")[1].trim();
-        } else if (line.includes("Objeto:")) {
-            collectingObjeto = true;
-            objetoContent = line.split("Objeto:")[1].trim();
-        } else if (collectingObjeto) {
-            if (line.includes("Data do Certame:")) {
-                collectingObjeto = false;
-                currentLicitacao['Objeto'] = objetoContent;
-                const rawDate = line.split("Data do Certame:")[1].trim();
-                currentLicitacao['DataCertame'] = parseDate(rawDate);
-            } else {
-                objetoContent += ' ' + line.trim();
-                console.log('Coletando linha do Objeto:', line);
+
+            // Inicia uma nova licitação
+            licitacao = {
+                Jurisdicionado: null,
+                DocumentoTCENumero: null,
+                NumeroLicitacao: null,
+                Modalidade: null,
+                Tipo: null,
+                TipoCompraServico: null,
+                Objeto: '',
+                DataCertame: null,
+                LocalCertame: null,
+                ValorEstimado: null,
+                Observacoes: ''
+            };
+            coletandoObjeto = false;
+            coletandoObservacoes = false;
+
+            // Preenche o campo atual
+            licitacao.Jurisdicionado = linha.replace('Jurisdicionado:', '').trim();
+        } else if (linha.startsWith('Documento TCE nº:')) {
+            licitacao.DocumentoTCENumero = linha.replace('Documento TCE nº:', '').trim();
+        } else if (linha.startsWith('Número da Licitação:')) {
+            licitacao.NumeroLicitacao = linha.replace('Número da Licitação:', '').trim();
+        } else if (linha.startsWith('Modalidade:')) {
+            licitacao.Modalidade = linha.replace('Modalidade:', '').trim();
+        } else if (linha.startsWith('Tipo:')) {
+            licitacao.Tipo = linha.replace('Tipo:', '').trim();
+        } else if (linha.startsWith('Tipo de Compra/Serviço:')) {
+            licitacao.TipoCompraServico = linha.replace('Tipo de Compra/Serviço:', '').trim();
+        } else if (linha.startsWith('Objeto:')) {
+            licitacao.Objeto = linha.replace('Objeto:', '').trim();
+            coletandoObjeto = true;
+            coletandoObservacoes = false;
+        } else if (linha.startsWith('Data do Certame:')) {
+            licitacao.DataCertame = parseDate(linha.replace('Data do Certame:', '').trim());
+            coletandoObjeto = false;
+            coletandoObservacoes = false;
+        } else if (linha.startsWith('Local do Certame:')) {
+            licitacao.LocalCertame = linha.replace('Local do Certame:', '').trim();
+            coletandoObjeto = false;
+            coletandoObservacoes = false;
+        } else if (linha.startsWith('Valor Estimado:')) {
+            licitacao.ValorEstimado = linha.replace('Valor Estimado:', '').trim();
+            coletandoObjeto = false;
+            coletandoObservacoes = false;
+        } else if (linha.startsWith('Observações:')) {
+            licitacao.Observacoes = linha.replace('Observações:', '').trim();
+            coletandoObservacoes = true;
+            coletandoObjeto = false;
+        } else if (coletandoObjeto) {
+            licitacao.Objeto += ' ' + linha;
+        } else if (coletandoObservacoes) {
+            licitacao.Observacoes += ' ' + linha;
+        } else if (linha === '') {
+            // Ao encontrar uma linha vazia, indica o final de uma licitação.
+            // Verifica se todos os campos obrigatórios estão preenchidos
+            if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
+                licitacoes.push({ ...licitacao });
             }
-        } else if (line.includes("Local do Certame:")) {
-            currentLicitacao['LocalCertame'] = line.split("Local do Certame:")[1].trim();
-        } else if (line.includes("Valor Estimado:")) {
-            currentLicitacao['ValorEstimado'] = line.split("Valor Estimado:")[1].trim();
-        } else if (line.includes("Observações:")) {
-            currentLicitacao['Observacoes'] = line.split("Observações:")[1].trim();
+
+            // Reinicia o objeto para a próxima licitação
+            licitacao = {
+                Jurisdicionado: null,
+                DocumentoTCENumero: null,
+                NumeroLicitacao: null,
+                Modalidade: null,
+                Tipo: null,
+                TipoCompraServico: null,
+                Objeto: '',
+                DataCertame: null,
+                LocalCertame: null,
+                ValorEstimado: null,
+                Observacoes: ''
+            };
+            coletandoObjeto = false;
+            coletandoObservacoes = false;
         }
     });
 
-    // Adicionar a última licitação (se houver)
-    if (Object.keys(currentLicitacao).length > 0) {
-        licitacoes.push(currentLicitacao);
-        console.log('Licitação adicionada:', currentLicitacao);
+    // Para o caso da última licitação não ser seguida por uma linha vazia
+    if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
+        licitacoes.push({ ...licitacao });
     }
 
-    console.log('Licitações extraídas:', licitacoes);
     return licitacoes;
 }
 
