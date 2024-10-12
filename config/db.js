@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connectDB = async () => {
     try {
@@ -6,10 +7,7 @@ const connectDB = async () => {
         if (!uri) {
             throw new Error("MONGO_URI não está definida. Verifique suas variáveis de ambiente.");
         }
-        await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(uri);
         console.log('Conectado ao MongoDB com sucesso');
     } catch (error) {
         console.error('Erro ao conectar ao MongoDB:', error);

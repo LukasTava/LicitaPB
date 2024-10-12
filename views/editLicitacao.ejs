@@ -1,0 +1,34 @@
+<!-- views/editLicitacao.ejs -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Licitação</title>
+</head>
+<body>
+    <h1>Editar Licitação</h1>
+    <form action="/licitacoes/edit/<%= licitacao._id %>" method="POST">
+        <label for="Jurisdicionado">Jurisdicionado:</label>
+        <input type="text" name="Jurisdicionado" value="<%= licitacao.Jurisdicionado %>"><br>
+        <label for="DocumentoTCENumero">Documento TCE nº:</label>
+        <input type="text" name="DocumentoTCENumero" value="<%= licitacao.DocumentoTCENumero %>"><br>
+        <label for="NumeroLicitacao">Número da Licitação:</label>
+        <input type="text" name="NumeroLicitacao" value="<%= licitacao.NumeroLicitacao %>"><br>
+        <label for="Modalidade">Modalidade:</label>
+        <input type="text" name="Modalidade" value="<%= licitacao.Modalidade %>"><br>
+        <label for="Tipo">Tipo:</label>
+        <input type="text" name="Tipo" value="<%= licitacao.Tipo %>"><br>
+        <label for="Objeto">Objeto:</label>
+        <input type="text" name="Objeto" value="<%= licitacao.Objeto %>"><br>
+        <label for="DataCertame">Data do Certame:</label>
+        <input type="datetime-local" name="DataCertame" value="<%= licitacao.DataCertame ? licitacao.DataCertame.toISOString().slice(0,16) : '' %>"><br>
+        <label for="LocalCertame">Local do Certame:</label>
+        <input type="text" name="LocalCertame" value="<%= licitacao.LocalCertame %>"><br>
+        <label for="Observacoes">Observações:</label>
+        <textarea name="Observacoes"><%= licitacao.Observacoes %></textarea><br>
+        <button type="submit">Salvar</button>
+    </form>
+    <a href="/licitacoes">Voltar</a>
+</body>
+</html>

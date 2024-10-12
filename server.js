@@ -1,22 +1,29 @@
-require('dotenv').config();
+// server.js
+
 const express = require('express');
 const connectDB = require('./config/db');
-const licitacaoRoutes = require('./routes/licitacaoRoutes');
+const licitacoesRoutes = require('./routes/licitacoesRoutes');
 
 const app = express();
 
-// Conectar ao banco de dados
-const startServer = async () => {
-    await connectDB(); // Isso agora vai usar a função connectDB que carrega a URI do .env
-    app.listen(3000, () => {
-        console.log('Servidor rodando em http://localhost:3000');
-    });
-};
+// Conectar ao MongoDB
+connectDB();
 
-// Middleware para express entender JSON
+// Configurações de middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.set('view engine', 'ejs'); // Configurar a engine de views
 
-// Definindo rotas
-app.use('/licitacoes', licitacaoRoutes);
+// Usar as rotas de licitações
+app.use('/licitacoes', licitacoesRoutes);
 
-startServer();
+// Definir a rota raiz para redirecionar para /licitacoes
+app.get('/', (req, res) => {
+    res.redirect('/licitacoes'); // Redireciona para a página de licitações
+});
+
+// Iniciar o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+});

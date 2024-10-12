@@ -1,29 +1,46 @@
-// routes/licitacaoRoutes.js
+// routes/licitacoesRoutes.js
 
 const express = require('express');
-const Licitacao = require('../models/licitacao'); // Supondo que exista um modelo Licitacao no diretório models
-
-// Cria um roteador do Express
 const router = express.Router();
+const Licitacao = require('../models/licitacao');
 
-// Rota GET para listar todas as licitações
+// Rota para listar todas as licitações
 router.get('/', async (req, res) => {
     try {
         const licitacoes = await Licitacao.find();
-        res.json(licitacoes);
-    } catch (error) {
-        res.status(500).json({ message: 'Erro ao buscar as licitações', error });
+        res.render('licitacoes', { licitacoes });
+    } catch (err) {
+        res.status(500).send('Erro ao buscar licitações.');
     }
 });
 
-// Rota POST para criar uma nova licitação
-router.post('/', async (req, res) => {
+// Rota para renderizar o formulário de edição
+router.get('/edit/:id', async (req, res) => {
     try {
-        const novaLicitacao = new Licitacao(req.body);
-        await novaLicitacao.save();
-        res.status(201).json(novaLicitacao);
-    } catch (error) {
-        res.status(400).json({ message: 'Erro ao criar uma licitação', error });
+        const licitacao = await Licitacao.findById(req.params.id);
+        res.render('editLicitacao', { licitacao });
+    } catch (err) {
+        res.status(500).send('Erro ao buscar licitação para edição.');
+    }
+});
+
+// Rota para atualizar a licitação
+router.post('/edit/:id', async (req, res) => {
+    try {
+        await Licitacao.findByIdAndUpdate(req.params.id, req.body);
+        res.redirect('/licitacoes');
+    } catch (err) {
+        res.status(500).send('Erro ao atualizar a licitação.');
+    }
+});
+
+// Rota para excluir a licitação
+router.get('/delete/:id', async (req, res) => {
+    try {
+        await Licitacao.findByIdAndDelete(req.params.id);
+        res.redirect('/licitacoes');
+    } catch (err) {
+        res.status(500).send('Erro ao excluir a licitação.');
     }
 });
 
