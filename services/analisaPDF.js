@@ -23,6 +23,19 @@ async function extractTextFromPdf(pdfPath) {
     return text;
 }
 
+// Função para converter a data para o formato que o Mongoose reconhece
+function parseDate(rawDate) {
+    const regex = /(\d{2})\/(\d{2})\/(\d{4}) às (\d{2}):(\d{2})/;
+    const match = rawDate.match(regex);
+
+    if (match) {
+        const [_, day, month, year, hour, minute] = match;
+        return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+    }
+
+    return null;
+}
+
 // Função para localizar a seção "Atos dos Jurisdicionados" e extrair dados das licitações
 function extractLicitacoes(textoExtraido) {
     const licitacoes = [];
@@ -35,43 +48,17 @@ function extractLicitacoes(textoExtraido) {
         Modalidade: null,
         Tipo: null,
         TipoCompraServico: null,
-        Objeto: '',
+        Objeto: null,
         DataCertame: null,
         LocalCertame: null,
         ValorEstimado: null,
-        Observacoes: ''
+        Observacoes: null
     };
-
-    let coletandoObjeto = false;
-    let coletandoObservacoes = false;
 
     linhas.forEach((linha) => {
         linha = linha.trim();
 
         if (linha.startsWith('Jurisdicionado:')) {
-            // Salva a licitação anterior se ela for válida
-            if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
-                licitacoes.push({ ...licitacao });
-            }
-
-            // Inicia uma nova licitação
-            licitacao = {
-                Jurisdicionado: null,
-                DocumentoTCENumero: null,
-                NumeroLicitacao: null,
-                Modalidade: null,
-                Tipo: null,
-                TipoCompraServico: null,
-                Objeto: '',
-                DataCertame: null,
-                LocalCertame: null,
-                ValorEstimado: null,
-                Observacoes: ''
-            };
-            coletandoObjeto = false;
-            coletandoObservacoes = false;
-
-            // Preenche o campo atual
             licitacao.Jurisdicionado = linha.replace('Jurisdicionado:', '').trim();
         } else if (linha.startsWith('Documento TCE nº:')) {
             licitacao.DocumentoTCENumero = linha.replace('Documento TCE nº:', '').trim();
@@ -85,35 +72,27 @@ function extractLicitacoes(textoExtraido) {
             licitacao.TipoCompraServico = linha.replace('Tipo de Compra/Serviço:', '').trim();
         } else if (linha.startsWith('Objeto:')) {
             licitacao.Objeto = linha.replace('Objeto:', '').trim();
-            coletandoObjeto = true;
-            coletandoObservacoes = false;
         } else if (linha.startsWith('Data do Certame:')) {
-            licitacao.DataCertame = parseDate(linha.replace('Data do Certame:', '').trim());
-            coletandoObjeto = false;
-            coletandoObservacoes = false;
+            const rawDate = linha.replace('Data do Certame:', '').trim();
+            licitacao.DataCertame = parseDate(rawDate);
         } else if (linha.startsWith('Local do Certame:')) {
             licitacao.LocalCertame = linha.replace('Local do Certame:', '').trim();
-            coletandoObjeto = false;
-            coletandoObservacoes = false;
         } else if (linha.startsWith('Valor Estimado:')) {
             licitacao.ValorEstimado = linha.replace('Valor Estimado:', '').trim();
-            coletandoObjeto = false;
-            coletandoObservacoes = false;
         } else if (linha.startsWith('Observações:')) {
             licitacao.Observacoes = linha.replace('Observações:', '').trim();
-            coletandoObservacoes = true;
-            coletandoObjeto = false;
-        } else if (coletandoObjeto) {
-            licitacao.Objeto += ' ' + linha;
-        } else if (coletandoObservacoes) {
-            licitacao.Observacoes += ' ' + linha;
         } else if (linha === '') {
             // Ao encontrar uma linha vazia, indica o final de uma licitação.
             // Verifica se todos os campos obrigatórios estão preenchidos
-            if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
+            if (
+                licitacao.Jurisdicionado &&
+                licitacao.DocumentoTCENumero &&
+                licitacao.NumeroLicitacao &&
+                licitacao.Modalidade &&
+                licitacao.DataCertame // Agora verifica também se a "Data do Certame" está presente
+            ) {
                 licitacoes.push({ ...licitacao });
             }
-
             // Reinicia o objeto para a próxima licitação
             licitacao = {
                 Jurisdicionado: null,
@@ -122,36 +101,27 @@ function extractLicitacoes(textoExtraido) {
                 Modalidade: null,
                 Tipo: null,
                 TipoCompraServico: null,
-                Objeto: '',
+                Objeto: null,
                 DataCertame: null,
                 LocalCertame: null,
                 ValorEstimado: null,
-                Observacoes: ''
+                Observacoes: null
             };
-            coletandoObjeto = false;
-            coletandoObservacoes = false;
         }
     });
 
     // Para o caso da última licitação não ser seguida por uma linha vazia
-    if (licitacao.Jurisdicionado && licitacao.DocumentoTCENumero && licitacao.NumeroLicitacao && licitacao.Modalidade) {
+    if (
+        licitacao.Jurisdicionado &&
+        licitacao.DocumentoTCENumero &&
+        licitacao.NumeroLicitacao &&
+        licitacao.Modalidade &&
+        licitacao.DataCertame // Agora verifica também se a "Data do Certame" está presente
+    ) {
         licitacoes.push({ ...licitacao });
     }
 
     return licitacoes;
-}
-
-// Função para converter a data para o formato que o Mongoose reconhece
-function parseDate(rawDate) {
-    const regex = /(\d{2})\/(\d{2})\/(\d{4}) às (\d{2}):(\d{2})/;
-    const match = rawDate.match(regex);
-
-    if (match) {
-        const [_, day, month, year, hour, minute] = match;
-        return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
-    }
-
-    return null;
 }
 
 // Função principal para processar o PDF e extrair licitações
