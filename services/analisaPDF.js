@@ -1,9 +1,8 @@
-// analisaPDF.js
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
-const Licitacao = require('../models/licitacao'); // Certifique-se de que o caminho está correto
+const Licitacao = require('../models/licitacao'); 
 
 // Função para extrair texto do PDF ignorando a primeira página
 async function extractTextFromPdf(pdfPath) {
@@ -48,52 +47,63 @@ function extractLicitacoes(textoExtraido) {
         Modalidade: null,
         Tipo: null,
         TipoCompraServico: null,
-        Objeto: null,
+        Objeto: '',
         DataCertame: null,
         LocalCertame: null,
         ValorEstimado: null,
         Observacoes: null
     };
 
+    let capturingObjeto = false;
+
     linhas.forEach((linha) => {
         linha = linha.trim();
 
         if (linha.startsWith('Jurisdicionado:')) {
             licitacao.Jurisdicionado = linha.replace('Jurisdicionado:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Documento TCE nº:')) {
             licitacao.DocumentoTCENumero = linha.replace('Documento TCE nº:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Número da Licitação:')) {
             licitacao.NumeroLicitacao = linha.replace('Número da Licitação:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Modalidade:')) {
             licitacao.Modalidade = linha.replace('Modalidade:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Tipo:')) {
             licitacao.Tipo = linha.replace('Tipo:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Tipo de Compra/Serviço:')) {
             licitacao.TipoCompraServico = linha.replace('Tipo de Compra/Serviço:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Objeto:')) {
             licitacao.Objeto = linha.replace('Objeto:', '').trim();
+            capturingObjeto = true;
         } else if (linha.startsWith('Data do Certame:')) {
             const rawDate = linha.replace('Data do Certame:', '').trim();
             licitacao.DataCertame = parseDate(rawDate);
+            capturingObjeto = false;
         } else if (linha.startsWith('Local do Certame:')) {
             licitacao.LocalCertame = linha.replace('Local do Certame:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Valor Estimado:')) {
             licitacao.ValorEstimado = linha.replace('Valor Estimado:', '').trim();
+            capturingObjeto = false;
         } else if (linha.startsWith('Observações:')) {
             licitacao.Observacoes = linha.replace('Observações:', '').trim();
+            capturingObjeto = false;
         } else if (linha === '') {
-            // Ao encontrar uma linha vazia, indica o final de uma licitação.
-            // Verifica se todos os campos obrigatórios estão preenchidos
+            // Adiciona a licitação atual à lista e reseta o objeto
             if (
                 licitacao.Jurisdicionado &&
                 licitacao.DocumentoTCENumero &&
                 licitacao.NumeroLicitacao &&
                 licitacao.Modalidade &&
-                licitacao.DataCertame // Agora verifica também se a "Data do Certame" está presente
+                licitacao.DataCertame
             ) {
                 licitacoes.push({ ...licitacao });
             }
-            // Reinicia o objeto para a próxima licitação
             licitacao = {
                 Jurisdicionado: null,
                 DocumentoTCENumero: null,
@@ -101,28 +111,32 @@ function extractLicitacoes(textoExtraido) {
                 Modalidade: null,
                 Tipo: null,
                 TipoCompraServico: null,
-                Objeto: null,
+                Objeto: '',
                 DataCertame: null,
                 LocalCertame: null,
                 ValorEstimado: null,
                 Observacoes: null
             };
+            capturingObjeto = false;
+        } else if (capturingObjeto) {
+            // Continua capturando linhas adicionais do Objeto
+            licitacao.Objeto += ' ' + linha;
         }
     });
 
-    // Para o caso da última licitação não ser seguida por uma linha vazia
     if (
         licitacao.Jurisdicionado &&
         licitacao.DocumentoTCENumero &&
         licitacao.NumeroLicitacao &&
         licitacao.Modalidade &&
-        licitacao.DataCertame // Agora verifica também se a "Data do Certame" está presente
+        licitacao.DataCertame
     ) {
         licitacoes.push({ ...licitacao });
     }
 
     return licitacoes;
 }
+
 
 // Função principal para processar o PDF e extrair licitações
 async function processPdf(pdfPath) {
@@ -146,7 +160,7 @@ async function processPdf(pdfPath) {
             console.log('Nenhuma licitação extraída do PDF.');
         }
 
-        // Excluir o arquivo PDF após processamento (de forma assíncrona)
+        // Excluir o arquivo PDF após processamento 
         fs.unlink(pdfPath, (err) => {
             if (err) {
                 console.error('Erro ao excluir o arquivo PDF:', err);
@@ -158,8 +172,6 @@ async function processPdf(pdfPath) {
         console.error('Erro ao processar o PDF:', error);
     }
 }
-
-// Exportar as funções
 module.exports = {
     processPdf,
     extractTextFromPdf

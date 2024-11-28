@@ -1,8 +1,7 @@
-// app.js
 require('dotenv').config();
 const connectDB = require('./config/db');
 const { processPdf } = require('./services/analisaPDF');
-const baixarPDF = require('./services/downloadPDF'); // Importando a função baixarPDF corretamente
+const baixarPDF = require('./services/downloadPDF'); 
 const fs = require('fs');
 const path = require('path');
 

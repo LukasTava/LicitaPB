@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licitações na Paraíba</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Adicione uma referência a CSS para um layout mais bonito -->
+</head>
+<body>
+    <h1>Licitações Abertas - Estado da Paraíba</h1>
+    <a href="mapa_municipios.html">Ver Mapa de Licitações por Município</a>
+    <div id="lista-licitacoes">
+        <!-- Aqui pode ser uma lista ou uma tabela com as licitações, você pode implementar isso conforme necessário -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Jurisdicionado</th>
+                    <th>Documento TCE nº</th>
+                    <th>Número da Licitação</th>
+                    <th>Modalidade</th>
+                    <th>Tipo</th>
+                    <th>Objeto</th>
+                    <th>Data do Certame</th>
+                    <th>Local do Certame</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="licitacoes-tbody">
+                <!-- As linhas da tabela serão preenchidas dinamicamente via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Código JavaScript para carregar licitações e preencher a tabela
+        fetch('/api/licitacoesPorMunicipio')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('licitacoes-tbody');
+                data.forEach(municipio => {
+                    municipio.licitacoes.forEach(licitacao => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${licitacao.Jurisdicionado}</td>
+                            <td>${licitacao.DocumentoTCENumero}</td>
+                            <td>${licitacao.NumeroLicitacao}</td>
+                            <td>${licitacao.Modalidade}</td>
+                            <td>${licitacao.Tipo}</td>
+                            <td>${licitacao.Objeto}</td>
+                            <td>${licitacao.DataCertame}</td>
+                            <td>${licitacao.LocalCertame}</td>
+                            <td>
+                                <a href="/editar/${licitacao._id}">Editar</a> | 
+                                <a href="/excluir/${licitacao._id}">Excluir</a>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao buscar licitações:', error);
+            });
+    </script>
+</body>
+</html>

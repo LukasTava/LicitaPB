@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licitações na Paraíba</title>
+    <style>
+        #map {
+            width: 100%;
+            height: 80vh;
+        }
+        .balloon {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Licitações na Paraíba</h1>
+    <div id="map"></div>
+    <div id="balloon" class="balloon"></div>
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="municipios.json"></script> <!-- Carregar o JSON de municípios -->
+
+    <script>
+        // JavaScript para criar o mapa e adicionar a funcionalidade do balão
+        const width = 960;  
+        const height = 600;
+
+        const svg = d3.select("#map").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const projection = d3.geoMercator()
+            .scale(5000)
+            .center([-36.5, -7.5]) // Centraliza o mapa na Paraíba
+            .translate([width / 2, height / 2]);
+
+        const path = d3.geoPath().projection(projection);
+
+        // Carregar o GeoJSON do mapa
+        d3.json("PB_Municipios_2022_corrigido.json").then(data => {
+            
+            // Carregar o JSON de municípios
+            d3.json("municipios.json").then(municipios => {
+                // Extrair os nomes dos municípios do arquivo `municipios.json`
+                const municipiosList = municipios.map(m => m.nome);
+
+                // Renderizar o mapa
+                svg.selectAll("path")
+                    .data(data.features)
+                    .enter().append("path")
+                    .attr("d", path)
+                    .attr("fill", d => {
+                        // Normalizar e comparar os nomes para encontrar o município "Água Branca"
+                        const municipioNome = d.properties.NM_MUN.trim().toLowerCase();
+
+                        if (municipioNome === "água branca") {
+                            return "orange"; // Destacar "Água Branca" em laranja
+                        } else if (municipiosList.includes(municipioNome)) {
+                            return "#ccc"; // Normal para outros municípios
+                        } else {
+                            return "gray"; // Cor diferente para municípios não mapeados
+                        }
+                    })
+                    .attr("stroke", "#000")
+                    .on("mouseover", (event, d) => {
+                        const balloon = document.getElementById("balloon");
+                        balloon.style.display = "block";
+                        balloon.style.left = event.pageX + "px";
+                        balloon.style.top = event.pageY + "px";
+                        balloon.innerHTML = `
+                            <strong>${d.properties.NM_MUN}</strong><br>
+                            ${d.properties.licitacoesCount || 0} licitações abertas
+                        `;
+                    })
+                    .on("mouseout", () => {
+                        const balloon = document.getElementById("balloon");
+                        balloon.style.display = "none";
+                    });
+            }).catch(error => {
+                console.error("Erro ao carregar o JSON de municípios:", error);
+            });
+        }).catch(error => {
+            console.error("Erro ao carregar o JSON do mapa:", error);
+        });
+    </script>
+</body>
+</html>

@@ -11,7 +11,8 @@ const LicitacaoSchema = new mongoose.Schema({
     DataCertame: Date,
     LocalCertame: String,
     ValorEstimado: String,
-    Observacoes: String
+    Observacoes: String,
+    municipioIdentificado: String 
 }, { collection: 'licitacoes' });
 const Licitacao = mongoose.model('Licitacao', LicitacaoSchema);
 module.exports = Licitacao;
